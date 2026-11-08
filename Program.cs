@@ -1,7 +1,17 @@
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+//SE EXTRAE LA CADENA DE LA CONEXION DE APPSETINGS.JSON
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//CONFIGURACION DE LA BASE DE DATOS MYSQL
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+
+
 
 var app = builder.Build();
 
