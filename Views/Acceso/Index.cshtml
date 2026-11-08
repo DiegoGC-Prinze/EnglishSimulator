@@ -1,0 +1,428 @@
+﻿@{
+    ViewData["Title"] = "Acceso - Sistema de Aprendizaje";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Tipografía idéntica a la imagen (Montserrat) -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f7f9fb;
+            /* Fondo de cuadrícula estilo libreta idéntico a la imagen */
+            background-image: linear-gradient(#e5ecf3 1px, transparent 1px), linear-gradient(90deg, #e5ecf3 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #1a202c;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden; /* Para que las decoraciones no hagan scroll */
+        }
+
+        /* ----- DECORACIONES DE FONDO ----- */
+        .bg-decor {
+            position: absolute;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .dot {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.6;
+            z-index: -1;
+        }
+
+        /* ----- TARJETA BLANCA ----- */
+        .auth-card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+            padding: 3rem;
+            width: 100%;
+            max-width: 620px;
+            z-index: 10;
+            position: relative;
+        }
+
+        /* ----- ILUSTRACIONES DENTRO DE LA TARJETA ----- */
+        .card-decor {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* ----- TIPOGRAFÍA ----- */
+        .main-title {
+            font-weight: 800;
+            font-size: 1.45rem;
+            text-align: center;
+            margin-bottom: 0.3rem;
+            color: #111827;
+        }
+
+        .sub-title {
+            font-weight: 400;
+            font-size: 0.95rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #374151;
+        }
+
+        /* ----- CAJAS DE TEXTO (Input Groups) ----- */
+        .form-label {
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: #1f2937;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: stretch;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden;
+            height: 42px;
+            transition: 0.2s;
+        }
+
+            .input-wrapper:focus-within {
+                border-color: #0bb7cc;
+                box-shadow: 0 0 0 3px rgba(11, 183, 204, 0.15);
+            }
+
+        .icon-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 45px;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 1.05rem;
+        }
+
+            .icon-container i {
+                margin: 0 2px;
+            }
+
+        .input-wrapper input {
+            border: none;
+            box-shadow: none;
+            padding: 0 1rem;
+            flex: 1;
+            outline: none;
+            background: transparent;
+            font-size: 0.95rem;
+        }
+
+        /* ----- TEXTOS DE AYUDA ----- */
+        .helper-text {
+            font-size: 0.7rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .helper-link {
+            color: #6da1da;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+            .helper-link:hover {
+                text-decoration: underline;
+            }
+
+        /* ----- BOTONES ----- */
+        .btn-ingresar {
+            background-color: #0bb7cc; /* Color cyan del diseño */
+            color: white;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+            .btn-ingresar:hover {
+                background-color: #0aa3b5;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        .btn-registro-azul {
+            background-color: #6da1da; /* Azul claro pastel */
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            padding: 0.4rem 1rem;
+            line-height: 1.2;
+            transition: all 0.2s;
+        }
+
+            .btn-registro-azul:hover {
+                background-color: #5b90c9;
+                color: white;
+            }
+
+        .btn-crear {
+            background-color: #96deb6; /* Verde pastel */
+            color: #1f2937;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+
+            .btn-crear:hover {
+                background-color: #83cdA3;
+                color: #1f2937;
+                transform: translateY(-2px);
+            }
+
+        #seccion-registro {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================
+         ELEMENTOS DECORATIVOS DE FONDO (SVG)
+         ========================================== -->
+    <!-- Libro abierto flotante (Izquierda) -->
+    <svg class="bg-decor" style="left: 8%; top: 25%; width: 100px; transform: rotate(-15deg);" viewBox="0 0 100 100">
+        <path d="M50,85 C30,85 10,75 10,75 L10,25 C10,25 30,35 50,35 C70,35 90,25 90,25 L90,75 C90,75 70,85 50,85 Z" fill="none" stroke="#ed8936" stroke-width="3" stroke-linejoin="round" />
+        <path d="M50,35 L50,85" fill="none" stroke="#ed8936" stroke-width="3" />
+        <path d="M15,45 C30,50 45,45 45,45" fill="none" stroke="#ed8936" stroke-width="2" />
+        <path d="M15,55 C30,60 45,55 45,55" fill="none" stroke="#ed8936" stroke-width="2" />
+        <path d="M85,45 C70,50 55,45 55,45" fill="none" stroke="#ed8936" stroke-width="2" />
+        <path d="M85,55 C70,60 55,55 55,55" fill="none" stroke="#ed8936" stroke-width="2" />
+    </svg>
+
+    <!-- Cuadrícula Abstracta Verde/Gris (Izquierda abajo) -->
+    <svg class="bg-decor" style="left: 15%; top: 55%; width: 70px;" viewBox="0 0 100 100">
+        <rect x="10" y="10" width="22" height="22" fill="#cbd5e1" opacity="0.6" />
+        <rect x="37" y="10" width="22" height="22" fill="#cbd5e1" opacity="0.6" />
+        <rect x="64" y="10" width="22" height="22" fill="#86efac" opacity="0.8" />
+        <rect x="10" y="37" width="22" height="22" fill="#86efac" opacity="0.8" />
+        <rect x="37" y="37" width="22" height="22" fill="#cbd5e1" opacity="0.6" />
+        <rect x="64" y="37" width="22" height="22" fill="#cbd5e1" opacity="0.6" />
+        <rect x="10" y="64" width="22" height="22" fill="#cbd5e1" opacity="0.6" />
+        <rect x="37" y="64" width="22" height="22" fill="#86efac" opacity="0.8" />
+        <rect x="64" y="64" width="22" height="22" fill="#cbd5e1" opacity="0.6" />
+    </svg>
+
+    <!-- Triángulo Verde (Izquierda fondo) -->
+    <svg class="bg-decor" style="left: 5%; bottom: 15%; width: 35px;" viewBox="0 0 100 100">
+        <polygon points="50,15 90,85 10,85" fill="#86efac" />
+    </svg>
+
+    <!-- Puntos Flotantes -->
+    <div class="dot" style="width: 15px; height: 15px; background: #93c5fd; left: 12%; top: 45%;"></div>
+    <div class="dot" style="width: 10px; height: 10px; background: #fcd34d; left: 25%; bottom: 25%;"></div>
+    <div class="dot" style="width: 12px; height: 12px; background: #93c5fd; right: 15%; top: 15%;"></div>
+    <div class="dot" style="width: 16px; height: 16px; background: #e2e8f0; right: 25%; bottom: 10%;"></div>
+
+
+    <div class="container">
+        <div class="row justify-content-center">
+
+            <div class="auth-card">
+
+                <!-- ============================
+                     VISTA DE INICIO DE SESIÓN
+                     ============================ -->
+                <div id="seccion-login">
+
+                    <!-- SVG Globos de Chat (Hello/Hi) en la tarjeta -->
+                    <svg class="card-decor" style="left: -15px; bottom: 0px; width: 100px; height: 100px;" viewBox="0 0 100 100">
+                        <circle cx="85" cy="85" r="4" fill="none" stroke="#f6ad55" stroke-width="2" />
+                        <path d="M10,80 Q5,70 15,65" fill="none" stroke="#86efac" stroke-width="2" stroke-linecap="round" />
+                        <path d="M15,85 Q20,95 30,90" fill="none" stroke="#86efac" stroke-width="2" stroke-linecap="round" />
+                        <path d="M25,45 C25,25 75,25 75,45 C75,60 60,65 50,65 L35,75 L35,65 C25,60 25,55 25,45 Z" fill="white" stroke="#94a3b8" stroke-width="1.5" stroke-linejoin="round" />
+                        <text x="50" y="49" font-family="Montserrat, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Hello</text>
+                        <path d="M5,65 C5,50 45,50 45,65 C45,75 35,80 25,80 L15,88 L15,80 C5,75 5,70 5,65 Z" fill="white" stroke="#68d391" stroke-width="1.5" stroke-linejoin="round" />
+                        <text x="25" y="69" font-family="Montserrat, sans-serif" font-size="14" font-weight="600" fill="#68d391" text-anchor="middle">Hi</text>
+                    </svg>
+
+                    <!-- SVG Birrete de Graduación en la tarjeta -->
+                    <svg class="card-decor" style="right: 15px; bottom: 15px; width: 70px; height: 70px;" viewBox="0 0 100 100">
+                        <path d="M50,25 L90,45 L50,65 L10,45 Z" fill="none" stroke="#ed8936" stroke-width="2.5" stroke-linejoin="round" />
+                        <path d="M25,53 L25,75 C25,85 75,85 75,75 L75,53" fill="none" stroke="#ed8936" stroke-width="2.5" stroke-linecap="round" />
+                        <path d="M90,45 L90,70" fill="none" stroke="#ed8936" stroke-width="2.5" stroke-linecap="round" />
+                        <circle cx="90" cy="75" r="3.5" fill="#ed8936" />
+                    </svg>
+
+                    <h2 class="main-title">SISTEMA DE APRENDIZAJE DE INGLES</h2>
+                    <p class="sub-title">Bienvenid@@, ingresa tus credenciales:</p>
+
+                    @if (ViewBag.ErrorLogin != null)
+                    {
+                        <div class="alert alert-danger py-2 small text-center mb-4 rounded-2 border-0 bg-danger text-white position-relative" style="z-index: 20;">@ViewBag.ErrorLogin</div>
+                    }
+                    @if (ViewBag.ExitoRegistro != null)
+                    {
+                        <div class="alert alert-success py-2 small text-center mb-4 rounded-2 border-0 bg-success text-white position-relative" style="z-index: 20;">@ViewBag.ExitoRegistro</div>
+                    }
+
+                    <form asp-action="Ingresar" method="post" style="position: relative; z-index: 20;">
+                        <!-- Fila Correo -->
+                        <div class="row align-items-center mb-4">
+                            <label class="col-4 form-label text-end pe-3 mb-0">Correo:</label>
+                            <div class="col-7">
+                                <div class="input-wrapper">
+                                    <div class="icon-container"><i class="bi bi-envelope-at"></i></div>
+                                    <input type="email" name="correo" required />
+                                </div>
+                                <div class="helper-text text-center">
+                                    ¿No tienes usuario? <span class="helper-link" onclick="toggleVistas()">Regístrate</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fila Contraseña -->
+                        <div class="row align-items-center mb-4">
+                            <label class="col-4 form-label text-end pe-3 mb-0">Contraseña:</label>
+                            <div class="col-7">
+                                <div class="input-wrapper">
+                                    <div class="icon-container"><i class="bi bi-lock"></i></div>
+                                    <input type="password" name="contrasena" required />
+                                </div>
+                            
+                            </div>
+                        </div>
+
+                        <!-- Botón Ingresar -->
+                        <div class="row justify-content-center mt-5 mb-2">
+                            <div class="col-auto">
+                                <button type="submit" class="btn-ingresar">
+                                    INGRESAR <i class="bi bi-box-arrow-in-right ms-2 fw-bold fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ============================
+                     VISTA DE REGISTRO
+                     ============================ -->
+                <div id="seccion-registro">
+                    <h2 class="main-title">REGISTRO DE USUARIO</h2>
+                    <p class="sub-title">Ingresa los siguientes datos:</p>
+
+                    @if (ViewBag.ErrorRegistro != null)
+                    {
+                        <div class="alert alert-danger py-2 small text-center mb-4 rounded-2 border-0 bg-danger text-white">@ViewBag.ErrorRegistro</div>
+                    }
+
+                    <form asp-action="Registrar" method="post">
+                        <!-- Nombre -->
+                        <div class="row align-items-center mb-3">
+                            <label class="col-4 form-label text-end pe-3 mb-0">Nombre Completo:</label>
+                            <div class="col-7">
+                                <div class="input-wrapper">
+                                    <div class="icon-container"><i class="bi bi-person"></i></div>
+                                    <input type="text" name="nombre" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Correo -->
+                        <div class="row align-items-center mb-3">
+                            <label class="col-4 form-label text-end pe-3 mb-0">Correo Electronico:</label>
+                            <div class="col-7">
+                                <div class="input-wrapper">
+                                    <div class="icon-container"><i class="bi bi-envelope-at"></i></div>
+                                    <input type="email" name="correo" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div class="row align-items-center mb-3">
+                            <label class="col-4 form-label text-end pe-3 mb-0">Contraseña:</label>
+                            <div class="col-7">
+                                <div class="input-wrapper">
+                                    <div class="icon-container"><i class="bi bi-key"></i></div>
+                                    <input type="password" name="contrasena" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Confirmar Contraseña (Usa doble icono igual que el diseño) -->
+                        <div class="row align-items-center mb-3">
+                            <label class="col-4 form-label text-end pe-3 mb-0">Confirmar Contraseña:</label>
+                            <div class="col-7">
+                                <div class="input-wrapper">
+                                    <div class="icon-container"><i class="bi bi-lock"></i><i class="bi bi-lock"></i></div>
+                                    <input type="password" name="confirmarContrasena" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botonera de Registro -->
+                        <div class="row mt-4 pt-2">
+                            <div class="col-12 d-flex justify-content-center gap-3 align-items-center">
+                                <button type="button" class="btn-registro-azul text-center" onclick="toggleVistas()">
+                                    ¿Ya tienes usuario?<br />Inicia sesión aquí
+                                </button>
+                                <button type="submit" class="btn-crear shadow-sm">
+                                    CREAR CUENTA <i class="bi bi-check-circle ms-2 fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleVistas() {
+            const login = document.getElementById('seccion-login');
+            const registro = document.getElementById('seccion-registro');
+
+            if (login.style.display === 'none') {
+                login.style.display = 'block';
+                registro.style.display = 'none';
+            } else {
+                login.style.display = 'none';
+                registro.style.display = 'block';
+            }
+        }
+
+        // Forzar apertura de la vista de registro si hubo un error al registrarse
+        @if (ViewBag.ErrorRegistro != null)
+        {
+            <text>
+                document.getElementById('seccion-login').style.display = 'none';
+                document.getElementById('seccion-registro').style.display = 'block';
+            </text>
+        }
+    </script>
+</body>
+</html>
