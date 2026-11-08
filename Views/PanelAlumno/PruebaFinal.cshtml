@@ -1,0 +1,276 @@
+﻿@{
+    ViewData["Title"] = "Prueba Final";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <!-- Aquí mandamos llamar tu archivo CSS global con los botones 3D -->
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f7f9fb;
+            background-image: linear-gradient(#e5ecf3 1px, transparent 1px), linear-gradient(90deg, #e5ecf3 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #1a202c;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- NAVBAR SUPERIOR --- */
+        .top-navbar {
+            background-color: #fdfdfd;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .navbar-brand-title {
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-weight: 500;
+        }
+
+        .btn-logout {
+            background-color: #fca5a5; /* Rojo pastel */
+            color: #7f1d1d;
+            border: none;
+            border-radius: 6px;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+            .btn-logout:hover {
+                background-color: #ef4444;
+                color: white;
+            }
+
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background-color: #fdfdfd;
+            border-right: 2px solid #e2e8f0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+            .menu-item:hover {
+                background-color: #f1f5f9;
+                color: #1a202c;
+            }
+
+            .menu-item.active {
+                background-color: #e2e8f0;
+                color: #1a202c;
+                font-weight: 700;
+                border-left: 4px solid #64748b;
+            }
+
+        .menu-icon {
+            font-size: 1.1rem;
+        }
+
+        /* --- ÁREA CENTRAL --- */
+        .content-area {
+            flex: 1;
+            padding: 3rem 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-weight: 800;
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            color: #1a202c;
+        }
+
+        .alert-strict {
+            color: #dc2626;
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-align: center;
+            max-width: 750px;
+            margin-bottom: 2rem;
+        }
+
+        /* --- CAJA DE REGLAS --- */
+        .rules-box {
+            background-color: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 2rem 3rem;
+            max-width: 550px;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            margin-bottom: 2rem;
+        }
+
+        .rules-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #334155;
+        }
+
+            .rules-list li {
+                margin-bottom: 1.2rem;
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+                .rules-list li:last-child {
+                    margin-bottom: 0;
+                }
+
+            .rules-list i {
+                color: #64748b;
+                font-size: 1.3rem;
+                margin-top: -2px;
+            }
+
+        /* --- CONFIRMACIÓN --- */
+        .confirmation-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #475569;
+            text-align: center;
+            text-transform: uppercase;
+            max-width: 600px;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR SUPERIOR -->
+    <nav class="top-navbar">
+        <div class="navbar-brand-title">TEST INGLES</div>
+        <div class="user-info">
+            <span>Bienvenido, Aldair Lopez <i class="bi bi-person ms-1 fs-5"></i></span>
+            <a href="/Acceso/Index" class="btn-3d btn-3d-red px-3 py-1" style="font-size: 0.9rem;">
+                Cerrar Sesion <i class="bi bi-box-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+
+
+        <!-- BARRA LATERAL -->
+        <aside class="sidebar">
+            <a href="/PanelAlumno/Index" class="menu-item active">
+                <span>-- Inicio</span>
+            </a>
+            <a href="/PanelAlumno/SimuladorPractica" class="menu-item">
+                <span>-- Simulador de practica</span>
+                <i class="bi bi-gear menu-icon"></i>
+            </a>
+            <a href="/PanelAlumno/PruebaFinal" class="menu-item">
+                <span>-- Prueba final</span>
+                <i class="bi bi-file-earmark-check menu-icon"></i>
+            </a>
+            <a href="/PanelAlumno/Historial" class="menu-item">
+                <span>-- Historial</span>
+                <i class="bi bi-clock-history menu-icon"></i>
+            </a>
+        </aside>
+
+        <!-- ÁREA CENTRAL -->
+        <main class="content-area">
+
+            <h1 class="page-title">PRUEBA FINAL</h1>
+
+            <div class="alert-strict">
+                RECORDATORIO: Tienes un tiempo estricto de 1 minuto por pregunta. En caso de agotar el tiempo, el sistema avanzara a la siguiente pregunta y la pregunta anterior se toma como incorrecta.
+            </div>
+
+            <!-- Caja de reglas -->
+            <div class="rules-box">
+                <ul class="rules-list">
+                    <li><i class="bi bi-asterisk"></i> 40 Preguntas aleatorias</li>
+                    <li><i class="bi bi-asterisk"></i> Valor de 2,5 puntos por reactivo</li>
+                    <li>
+                        <i class="bi bi-asterisk"></i>
+                        <span>
+                            Puntaje mínimo aprobatorio:<br>
+                            <span style="display:block; text-align:center; margin-top:5px; font-size:1.4rem;">70%</span>
+                        </span>
+                    </li>
+                    <li>
+                        <i class="bi bi-asterisk"></i>
+                        <span>Determina tu nivel: Basico, Intermedio o Avanzado</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="confirmation-text">
+                Estas a punto de comenzar el intento 1/2 de la prueba final, da click en continuar para iniciar la prueba:
+            </div>
+            <!-- Botón Modular 3D Amarillo -->
+            <a asp-controller="PanelAlumno" asp-action="Simulador" class="btn-3d btn-3d-yellow px-5 py-2">
+                CONTINUAR <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+
+        </main>
+
+    </div>
+
+</body>
+</html>

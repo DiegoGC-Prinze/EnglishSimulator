@@ -1,0 +1,480 @@
+﻿@{
+    ViewData["Title"] = "Historial y Estadísticas";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" href="~/css/site.css" />
+    <!-- Librería Chart.js para los gráficos interactivos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f7f9fb;
+            background-image: linear-gradient(#e5ecf3 1px, transparent 1px), linear-gradient(90deg, #e5ecf3 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #1a202c;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- NAVBAR SUPERIOR --- */
+        .top-navbar {
+            background-color: #fdfdfd;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .navbar-brand-title {
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-weight: 500;
+        }
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background-color: #fdfdfd;
+            border-right: 2px solid #e2e8f0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-shrink: 0; /* Evita que se encoja */
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+            .menu-item:hover {
+                background-color: #f1f5f9;
+                color: #1a202c;
+            }
+
+            .menu-item.active {
+                background-color: #e2e8f0;
+                color: #1a202c;
+                font-weight: 700;
+                border-left: 4px solid #64748b;
+            }
+
+        .menu-icon {
+            font-size: 1.1rem;
+        }
+
+        /* --- ÁREA CENTRAL --- */
+        .content-area {
+            flex: 1;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-weight: 800;
+            font-size: 2.2rem;
+            text-align: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            color: #1a202c;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            text-align: center;
+            color: #475569;
+            margin: 2rem 0 1.5rem 0;
+            letter-spacing: 1px;
+        }
+
+        /* --- TARJETAS RESUMEN (Rosa Pastel) --- */
+        .summary-cards-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            flex: 1;
+            background-color: #fecdd3; /* Rosa pastel del boceto */
+            border: 2px solid #fda4af;
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s;
+        }
+
+            .summary-card:hover {
+                transform: translateY(-3px);
+            }
+
+        .summary-label {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #881337;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-value {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: #4c0519;
+        }
+
+        /* --- GRÁFICOS --- */
+        .charts-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .chart-box {
+            background-color: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .chart-box-left {
+            flex: 2;
+        }
+        /* Más ancho para la gráfica de líneas */
+        .chart-box-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .chart-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #475569;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .chart-subtitle {
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* --- TABLA DE HISTORIAL --- */
+        .table-container {
+            background-color: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            margin-bottom: 2rem;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            text-align: center;
+        }
+
+            .custom-table th {
+                background-color: #f8fafc;
+                color: #334155;
+                font-weight: 700;
+                font-size: 0.95rem;
+                text-transform: uppercase;
+                padding: 1rem;
+                border-bottom: 2px solid #cbd5e1;
+            }
+
+            .custom-table td {
+                padding: 1rem;
+                border-bottom: 1px solid #e2e8f0;
+                color: #1e293b;
+                font-weight: 500;
+            }
+
+            .custom-table tr:last-child td {
+                border-bottom: none;
+            }
+
+            .custom-table tr:hover {
+                background-color: #f1f5f9;
+            }
+
+        /* Insignias para el resultado */
+        .badge-result {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .badge-aprobado {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-reprobado {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR SUPERIOR -->
+    <nav class="top-navbar">
+        <div class="navbar-brand-title">TEST INGLES</div>
+        <div class="user-info">
+            <span>Bienvenido, Aldair Lopez</span>
+            <a href="/Acceso/Index" class="btn-3d btn-3d-red px-3 py-1" style="font-size: 0.9rem;">
+                Cerrar Sesion <i class="bi bi-box-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+
+
+        <!-- BARRA LATERAL -->
+        <aside class="sidebar">
+            <a href="/PanelAlumno/Index" class="menu-item active">
+                <span>-- Inicio</span>
+            </a>
+            <a href="/PanelAlumno/SimuladorPractica" class="menu-item">
+                <span>-- Simulador de practica</span>
+                <i class="bi bi-gear menu-icon"></i>
+            </a>
+            <a href="/PanelAlumno/PruebaFinal" class="menu-item">
+                <span>-- Prueba final</span>
+                <i class="bi bi-file-earmark-check menu-icon"></i>
+            </a>
+            <a href="/PanelAlumno/Historial" class="menu-item">
+                <span>-- Historial</span>
+                <i class="bi bi-clock-history menu-icon"></i>
+            </a>
+        </aside>
+
+
+        <!-- ÁREA CENTRAL -->
+        <main class="content-area">
+
+            <h1 class="page-title">DASHBOARD Y ESTADISTICAS</h1>
+
+            <!-- TARJETAS SUPERIORES ROSAS -->
+            <div class="summary-cards-row">
+                <div class="summary-card">
+                    <div class="summary-label">PRACTICAS</div>
+                    <div class="summary-value">2 / 5</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">FINALES</div>
+                    <div class="summary-value">1 / 2</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">NIVEL ALCANZADO</div>
+                    <div class="summary-value">INTERMEDIO</div>
+                </div>
+            </div>
+
+            <h3 class="section-title">ESTADISTICAS DE LAS PRUEBAS</h3>
+
+            <!-- ÁREA DE GRÁFICOS -->
+            <div class="charts-row">
+
+                <!-- Gráfica de Líneas -->
+                <div class="chart-box chart-box-left">
+                    <div class="chart-title">GRAFICA DE LINEAS</div>
+                    <div class="chart-subtitle">Compara el avance de puntaje:</div>
+                    <!-- Contenedor del gráfico -->
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfico Gauge / Dona -->
+                <div class="chart-box chart-box-right">
+                    <div class="chart-title">GRAFICO DE GAUGE</div>
+
+                    <div style="position: relative; height: 160px; width: 160px; margin: 0 auto 1.5rem auto;">
+                        <canvas id="gaugeChart"></canvas>
+                        <!-- Texto centrado en la dona -->
+                        <div style="position:absolute; top:55%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.5rem; color:#1e293b;">
+                            +40%
+                        </div>
+                    </div>
+
+                    <div class="chart-subtitle mb-0" style="font-weight:600; color:#334155;">
+                        Mejora estimada: +40% debido a los intentos de practica.
+                    </div>
+                </div>
+
+            </div>
+
+            <h3 class="section-title">HISTORIAL DE LOS INTENTOS</h3>
+
+            <!-- TABLA DE RESULTADOS -->
+            <div class="table-container">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>FECHA</th>
+                            <th>TIPO DE PRUEBA</th>
+                            <th>PUNTAJE</th>
+                            <th>RESULTADO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Datos de ejemplo según tu gráfico -->
+                        <tr>
+                            <td>12/Nov/2026</td>
+                            <td>Prueba Final</td>
+                            <td>70%</td>
+                            <td><span class="badge-result badge-aprobado">Aprobado</span></td>
+                        </tr>
+                        <tr>
+                            <td>10/Nov/2026</td>
+                            <td>Simulador Práctica</td>
+                            <td>80%</td>
+                            <td><span class="badge-result badge-aprobado">Aprobado</span></td>
+                        </tr>
+                        <tr>
+                            <td>08/Nov/2026</td>
+                            <td>Simulador Práctica</td>
+                            <td>45%</td>
+                            <td><span class="badge-result badge-reprobado">Reprobado</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- SCRIPT PARA GENERAR LOS GRÁFICOS CON CHART.JS -->
+    <script>
+        // 1. Gráfica de Líneas (Avance)
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: ['Practica 1', 'Practica 2', 'Final'], // Nombres del eje X
+                datasets: [{
+                    label: 'Puntaje (%)',
+                    data: [45, 80, 70], // Puntos de la gráfica que dibujaste
+                    borderColor: '#3b82f6', // Línea Azul
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)', // Relleno semi-transparente
+                    borderWidth: 3,
+                    pointBackgroundColor: '#1d4ed8',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    fill: true,
+                    tension: 0.3 // Curvatura ligera de la línea
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false } // Ocultar leyenda
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) { return value + '%' }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Gráfico Gauge (Medidor de Mejora con Dona)
+        const gaugeCtx = document.getElementById('gaugeChart').getContext('2d');
+        new Chart(gaugeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Mejora', 'Restante'],
+                datasets: [{
+                    data: [40, 60], // 40% de mejora según tu texto
+                    backgroundColor: [
+                        '#10b981', // Verde esmeralda (Mejora)
+                        '#e2e8f0'  // Gris claro (Fondo)
+                    ],
+                    borderWidth: 0,
+                    borderRadius: 5 // Bordes redondeados de la dona
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%', // Grosor de la dona (Gauge)
+                rotation: -90, // Iniciar desde arriba (Medio círculo)
+                circumference: 180, // Solo dibujar la mitad superior
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
