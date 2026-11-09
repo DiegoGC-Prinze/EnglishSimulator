@@ -308,7 +308,7 @@
 
                         // Si el usuario ya gastó todos sus intentos, bloqueamos el botón amarillo
                         if (statPractica.attemptsUsed >= statPractica.maxAttempts) {
-                            const btnContinuar = document.querySelector('.btn-continuar');
+                            const btnContinuar = document.querySelector('.btn-3d btn-3d-yellow px-5 py-2');
                             btnContinuar.removeAttribute('href'); // Le quitamos el enlace
                             btnContinuar.style.pointerEvents = 'none'; // Evitamos que sea clickeable
                             btnContinuar.style.backgroundColor = '#d1d5db'; // Lo pintamos gris
