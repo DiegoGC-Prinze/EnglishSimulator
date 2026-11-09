@@ -66,6 +66,8 @@ builder.Services
                 : CookieSecurePolicy.Always;
 
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        // Redirigir a la página de login si no está autenticado
+        options.LoginPath = "/Acceso/Index";
 
         options.Events.OnRedirectToLogin = context =>
         {

@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using EnglishSimulator.Data;
 using EnglishSimulator.Models.Database;
+using Microsoft.AspNetCore.Authorization; // LIBRERIA PARA AUTORIZACION DE USUARIOS
 
 namespace EnglishSimulator.Controllers
 {
+    [Authorize] // CADA USUARIO DEBE ESTAR LOGUEADO PARA ACCEDER A ESTE CONTROLADOR
     public class PanelAlumnoController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -22,9 +24,7 @@ namespace EnglishSimulator.Controllers
         public IActionResult Simulador() { return View(); }
         public IActionResult Resultados() { return View(); }
 
-        // ==========================================
-        // NUEVA FUNCIÓN HISTORIAL CON DATOS REALES
-        // ==========================================
+       //HISTORIAL CON DATOS REALES
         public async Task<IActionResult> Historial()
         {
             // 1. ¿Quién está logueado?
