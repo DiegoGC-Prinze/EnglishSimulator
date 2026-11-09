@@ -1,0 +1,138 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+/* --- ESTRUCTURA BASE (Movimiento y efecto 3D) --- */
+.btn-3d {
+    border-radius: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    border-style: solid;
+    border-width: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+    /* Efecto global al pasar el mouse (se hunde a la mitad) */
+    .btn-3d:hover {
+        transform: translateY(2px);
+    }
+
+    /* Efecto global al hacer clic (se hunde por completo) */
+    .btn-3d:active {
+        transform: translateY(4px) !important;
+        box-shadow: none !important;
+    }
+
+/* --- VARIANTES DE COLOR --- */
+
+/* 1. Cyan/Azul (Para INGRESAR en el Login) */
+.btn-3d-cyan {
+    background-color: #0dcaf0;
+    color: white;
+    border-color: #08a0e9;
+    box-shadow: 0 4px 0 #08a0e9;
+}
+
+    .btn-3d-cyan:hover {
+        background-color: #3dd5f3;
+        box-shadow: 0 2px 0 #08a0e9;
+    }
+
+/* 2. Verde (Para REGISTRO e INICIAR PRUEBA) */
+.btn-3d-green {
+    background-color: #86efac;
+    color: #14532d; /* Texto verde oscuro */
+    border-color: #22c55e;
+    box-shadow: 0 4px 0 #22c55e;
+}
+
+    .btn-3d-green:hover {
+        background-color: #bbf7d0;
+        box-shadow: 0 2px 0 #22c55e;
+    }
+
+/* 3. Rojo (Para CERRAR SESIÓN) */
+.btn-3d-red {
+    background-color: #fca5a5;
+    color: #7f1d1d; /* Texto rojo oscuro */
+    border-color: #ef4444;
+    box-shadow: 0 4px 0 #ef4444;
+}
+
+    .btn-3d-red:hover {
+        background-color: #fecaca;
+        box-shadow: 0 2px 0 #ef4444;
+    }
+
+/* 4. Amarillo (Para CONTINUAR) */
+.btn-3d-yellow {
+    background-color: #fde047;
+    color: #854d0e; /* Texto café oscuro */
+    border-color: #eab308;
+    box-shadow: 0 4px 0 #eab308;
+}
+
+    .btn-3d-yellow:hover {
+        background-color: #fef08a;
+        box-shadow: 0 2px 0 #eab308;
+    }
+/* Azul (Para cambiar a Iniciar Sesión) */
+.btn-3d-blue {
+    background-color: #6da1da; /* Azul pastel */
+    color: white;
+    border-color: #4b86c7;
+    box-shadow: 0 4px 0 #4b86c7;
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+    .btn-3d-blue:hover {
+        background-color: #8ab7e6;
+        box-shadow: 0 2px 0 #4b86c7;
+    }
+/* 5. Morado/Lila (Para VER HISTORIAL) */
+.btn-3d-purple {
+    background-color: #c4b5fd;
+    color: #4c1d95; /* Texto morado oscuro */
+    border-color: #8b5cf6;
+    box-shadow: 0 4px 0 #8b5cf6;
+}
+
+    .btn-3d-purple:hover {
+        background-color: #ddd6fe;
+        box-shadow: 0 2px 0 #8b5cf6;
+        color: #4c1d95;
+    }

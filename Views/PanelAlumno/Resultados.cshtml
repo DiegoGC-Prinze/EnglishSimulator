@@ -1,0 +1,282 @@
+﻿@{
+    ViewData["Title"] = "Resultados de la Evaluación";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Tu archivo global con las clases .btn-3d -->
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f7f9fb;
+            background-image: linear-gradient(#e5ecf3 1px, transparent 1px), linear-gradient(90deg, #e5ecf3 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #1a202c;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        .results-container {
+            background-color: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 2rem 3rem 3rem 3rem;
+        }
+
+        /* --- HEADER --- */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .results-title-nav {
+            font-weight: 800;
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* --- TÍTULO CENTRAL --- */
+        .main-title {
+            font-weight: 800;
+            font-size: 1.8rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+        }
+
+        /* --- TARJETA DE RESULTADOS (Beige) --- */
+        .score-card {
+            background-color: #f5ece5; /* Tono beige/arena del boceto */
+            border: 2px solid #d6c6b9;
+            border-radius: 12px;
+            padding: 2.5rem;
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .score-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-percentage {
+            font-weight: 800;
+            font-size: 3rem;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+
+        .score-message {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #166534; /* Verde éxito */
+            margin-bottom: 2rem;
+        }
+
+        /* Fila de detalles */
+        .score-details {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #334155;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+        }
+
+        /* Separador oscuro dentro de la tarjeta */
+        .score-separator {
+            border: 0;
+            height: 2px;
+            background-color: #1e293b;
+            margin: 0 0 2rem 0;
+        }
+
+        /* Nivel Asignado */
+        .level-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .level-result {
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: #1e293b;
+            text-transform: uppercase;
+        }
+
+        /* --- BOTÓN LILA/MORADO (Nuevo) --- */
+        .btn-3d-purple {
+            background-color: #c4b5fd;
+            color: #4c1d95;
+            border-color: #8b5cf6;
+            box-shadow: 0 4px 0 #8b5cf6;
+        }
+
+            .btn-3d-purple:hover {
+                background-color: #ddd6fe;
+                box-shadow: 0 2px 0 #8b5cf6;
+                color: #4c1d95;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="results-container">
+
+        <!-- HEADER -->
+        <div class="results-header">
+            <h2 class="results-title-nav">TEST INGLES</h2>
+            <div class="header-right">
+                <span>Bienvenido, @User.Identity?.Name</span>
+                <a href="/PanelAlumno/Index" class="btn-3d btn-3d-red px-4 py-2" style="font-size: 0.95rem;">
+                    VOLVER A INICIO
+                </a>
+            </div>
+        </div>
+
+        <!-- TÍTULO -->
+        <h1 class="main-title">RESULTADOS DE LA EVALUACION</h1>
+
+        <!-- TARJETA BEIGE DE CALIFICACIÓN -->
+        <div class="score-card">
+            <div class="score-label">PORCENTAJE OBTENIDO:</div>
+            <div class="score-percentage" id="res-percentage">--%</div>
+
+            <div class="score-message" id="res-message">
+                Evaluando resultados... <i class="bi bi-hourglass-split ms-1"></i>
+            </div>
+
+            <div class="score-details">
+                <div>PUNTAJE TOTAL: <span class="fw-bold text-dark" id="res-points">--/100 PTS</span></div>
+                <div>TIPO DE PRUEBA: <span class="fw-bold text-dark" id="res-type">CARGANDO...</span></div>
+            </div>
+
+            <hr class="score-separator" />
+
+            <div class="level-label">NIVEL DE INGLES ASIGNADO:</div>
+            <div class="level-result" id="res-level">(--)</div>
+        </div>
+
+
+        <!-- Botón Modular 3D Purpura-->
+        <a asp-controller="PanelAlumno" asp-action="Historial" class="btn-3d btn-3d-purple px-5 py-3">
+           VER HISTORIAL DE LA PRUEBA <i class="bi bi-clock-history ms-2 fs-5"></i>
+        </a>
+
+    </div>
+    <!-- ==============================================
+     LÓGICA JAVASCRIPT DE RESULTADOS
+     ============================================== -->
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // 1. Extraer el ID del examen desde la URL
+            const params = new URLSearchParams(window.location.search);
+            const attemptId = params.get('id');
+
+            // Si entran directo sin ID, los mandamos al historial
+            if (!attemptId) {
+                window.location.href = '/PanelAlumno/Historial';
+                return;
+            }
+
+            try {
+                // 2. Consultar la API de C#
+                const response = await fetch(`/api/exams/${attemptId}/state`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderizarResultados(data);
+                } else {
+                    alert("No se pudieron cargar los resultados del examen.");
+                }
+            } catch (error) {
+                console.error("Error obteniendo resultados:", error);
+            }
+        });
+
+        function renderizarResultados(data) {
+            // Obtenemos el porcentaje final (C# lo manda en el score)
+            const score = data.score || data.Score || data.porcentajeObtenido || 0;
+            document.getElementById('res-percentage').innerText = `${score}%`;
+
+            // Colores y Mensaje según Status
+            const status = data.status || data.Status || data.resultado;
+            const messageEl = document.getElementById('res-message');
+
+            if (status === "APROBADO") {
+                messageEl.innerHTML = `¡FELICIDADES, HAS APROBADO! <i class="bi bi-emoji-smile-fill ms-1"></i>`;
+                messageEl.style.color = "#166534"; // Verde
+            } else {
+                messageEl.innerHTML = `HAS REPROBADO LA PRUEBA <i class="bi bi-emoji-frown-fill ms-1"></i>`;
+                messageEl.style.color = "#991b1b"; // Rojo
+            }
+
+            // Tipo de Prueba (Deducido por cantidad de preguntas)
+            const totalQuestions = data.totalQuestions || data.TotalQuestions || 20;
+            const tipoPrueba = totalQuestions === 40 ? "PRUEBA FINAL" : "PRÁCTICA";
+            document.getElementById('res-type').innerText = tipoPrueba;
+            document.getElementById('res-points').innerText = `${score}/100 PTS`;
+
+           // Nivel de Inglés
+        let nivel = "N/A (ES PRÁCTICA)";
+        if (tipoPrueba === "PRUEBA FINAL") {
+            if (score < 70) {
+                nivel = "(NO APROBADO)";
+            } else if (score < 80) {
+                nivel = "(BÁSICO)";
+            } else if (score < 90) {
+                nivel = "(INTERMEDIO)";
+            } else {
+                nivel = "(AVANZADO)";
+            }
+        }
+        document.getElementById('res-level').innerText = nivel;
+        }
+    </script>
+</body>
+</html>
