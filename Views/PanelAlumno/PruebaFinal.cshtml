@@ -203,7 +203,7 @@
     <nav class="top-navbar">
         <div class="navbar-brand-title">TEST INGLES</div>
         <div class="user-info">
-            <span>Bienvenido, Aldair Lopez <i class="bi bi-person ms-1 fs-5"></i></span>
+            <span>Bienvenido, @User.Identity?.Name <i class="bi bi-person ms-1 fs-5"></i></span>
             <a href="/Acceso/Index" class="btn-3d btn-3d-red px-3 py-1" style="font-size: 0.9rem;">
                 Cerrar Sesion <i class="bi bi-box-arrow-right ms-1"></i>
             </a>
@@ -215,14 +215,14 @@
 
         <!-- BARRA LATERAL -->
         <aside class="sidebar">
-            <a href="/PanelAlumno/Index" class="menu-item active">
+            <a href="/PanelAlumno/Index" class="menu-item">
                 <span>-- Inicio</span>
             </a>
             <a href="/PanelAlumno/SimuladorPractica" class="menu-item">
                 <span>-- Simulador de practica</span>
                 <i class="bi bi-gear menu-icon"></i>
             </a>
-            <a href="/PanelAlumno/PruebaFinal" class="menu-item">
+            <a href="/PanelAlumno/PruebaFinal" class="menu-item active">
                 <span>-- Prueba final</span>
                 <i class="bi bi-file-earmark-check menu-icon"></i>
             </a>
