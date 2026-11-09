@@ -280,7 +280,7 @@
     <nav class="top-navbar">
         <div class="navbar-brand-title">TEST INGLES</div>
         <div class="user-info">
-            <span>Bienvenido, Aldair Lopez</span>
+            <span>Bienvenido, @User.Identity?.Name</span>
             <a href="/Acceso/Index" class="btn-3d btn-3d-red px-3 py-1" style="font-size: 0.9rem;">
                 Cerrar Sesion <i class="bi bi-box-arrow-right ms-1"></i>
             </a>
@@ -319,15 +319,15 @@
             <div class="summary-cards-row">
                 <div class="summary-card">
                     <div class="summary-label">PRACTICAS</div>
-                    <div class="summary-value">2 / 5</div>
+                    <div class="summary-value">@ViewBag.Practicas / 5</div>
                 </div>
                 <div class="summary-card">
                     <div class="summary-label">FINALES</div>
-                    <div class="summary-value">1 / 2</div>
+                    <div class="summary-value">@ViewBag.Finales / 2</div>
                 </div>
                 <div class="summary-card">
                     <div class="summary-label">NIVEL ALCANZADO</div>
-                    <div class="summary-value">INTERMEDIO</div>
+                    <div class="summary-value">@ViewBag.Nivel</div>
                 </div>
             </div>
 
@@ -354,12 +354,11 @@
                         <canvas id="gaugeChart"></canvas>
                         <!-- Texto centrado en la dona -->
                         <div style="position:absolute; top:55%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.5rem; color:#1e293b;">
-                            +40%
+                            +@Convert.ToInt32(ViewBag.Mejora)%
                         </div>
                     </div>
-
                     <div class="chart-subtitle mb-0" style="font-weight:600; color:#334155;">
-                        Mejora estimada: +40% debido a los intentos de practica.
+                        Mejora estimada: +@Convert.ToInt32(ViewBag.Mejora)% respecto al primer intento.
                     </div>
                 </div>
 
@@ -379,25 +378,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Datos de ejemplo según tu gráfico -->
-                        <tr>
-                            <td>12/Nov/2026</td>
-                            <td>Prueba Final</td>
-                            <td>70%</td>
-                            <td><span class="badge-result badge-aprobado">Aprobado</span></td>
-                        </tr>
-                        <tr>
-                            <td>10/Nov/2026</td>
-                            <td>Simulador Práctica</td>
-                            <td>80%</td>
-                            <td><span class="badge-result badge-aprobado">Aprobado</span></td>
-                        </tr>
-                        <tr>
-                            <td>08/Nov/2026</td>
-                            <td>Simulador Práctica</td>
-                            <td>45%</td>
-                            <td><span class="badge-result badge-reprobado">Reprobado</span></td>
-                        </tr>
+                        @if (ViewBag.Intentos != null)
+                        {
+                            foreach (var intento in ViewBag.Intentos)
+                            {
+                                <tr>
+                                    <td>@intento.Fecha.ToString("dd/MMM/yyyy")</td>
+                                    <td>@intento.Tipo</td>
+                                    <td>@intento.Puntaje.ToString("0")%</td>
+                                    <td>
+                                        @if (intento.Resultado == "APROBADO")
+                                        {
+                                            <span class="badge-result badge-aprobado">Aprobado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-result badge-reprobado">Reprobado</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
                     </tbody>
                 </table>
             </div>
@@ -408,71 +409,54 @@
 
     <!-- SCRIPT PARA GENERAR LOS GRÁFICOS CON CHART.JS -->
     <script>
-        // 1. Gráfica de Líneas (Avance)
+        // Traemos las listas desde C# directo a Javascript
+        const labelsGrafica = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Labels));
+        const dataGrafica = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Scores));
+        const mejora = @Convert.ToInt32(ViewBag.Mejora);
+
+        // 1. Gráfica de Líneas
         const lineCtx = document.getElementById('lineChart').getContext('2d');
         new Chart(lineCtx, {
             type: 'line',
             data: {
-                labels: ['Practica 1', 'Practica 2', 'Final'], // Nombres del eje X
+                labels: labelsGrafica, // Nombres dinámicos
                 datasets: [{
                     label: 'Puntaje (%)',
-                    data: [45, 80, 70], // Puntos de la gráfica que dibujaste
-                    borderColor: '#3b82f6', // Línea Azul
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)', // Relleno semi-transparente
+                    data: dataGrafica, // Puntajes dinámicos
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 3,
                     pointBackgroundColor: '#1d4ed8',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
                     pointRadius: 6,
-                    pointHoverRadius: 8,
                     fill: true,
-                    tension: 0.3 // Curvatura ligera de la línea
+                    tension: 0.3
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false } // Ocultar leyenda
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) { return value + '%' }
-                        }
-                    }
-                }
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(value) { return value + '%' } } } }
             }
         });
 
-        // 2. Gráfico Gauge (Medidor de Mejora con Dona)
+        // 2. Gráfico Gauge
         const gaugeCtx = document.getElementById('gaugeChart').getContext('2d');
         new Chart(gaugeCtx, {
             type: 'doughnut',
             data: {
                 labels: ['Mejora', 'Restante'],
                 datasets: [{
-                    data: [40, 60], // 40% de mejora según tu texto
-                    backgroundColor: [
-                        '#10b981', // Verde esmeralda (Mejora)
-                        '#e2e8f0'  // Gris claro (Fondo)
-                    ],
-                    borderWidth: 0,
-                    borderRadius: 5 // Bordes redondeados de la dona
+                    data: [mejora, 100 - mejora < 0 ? 0 : 100 - mejora], // Calcula el restante
+                    backgroundColor: ['#10b981', '#e2e8f0'],
+                    borderWidth: 0, borderRadius: 5
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%', // Grosor de la dona (Gauge)
-                rotation: -90, // Iniciar desde arriba (Medio círculo)
-                circumference: 180, // Solo dibujar la mitad superior
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false }
-                }
+                responsive: true, maintainAspectRatio: false,
+                cutout: '75%', rotation: -90, circumference: 180,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
             }
         });
     </script>

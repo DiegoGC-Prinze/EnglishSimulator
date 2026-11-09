@@ -172,8 +172,7 @@
         <div class="results-header">
             <h2 class="results-title-nav">TEST INGLES</h2>
             <div class="header-right">
-                <span>Bienvenido, Aldair Lopez</span>
-                <!-- Botón de Volver a Inicio -->
+                <span>Bienvenido, @User.Identity?.Name</span>
                 <a href="/PanelAlumno/Index" class="btn-3d btn-3d-red px-4 py-2" style="font-size: 0.95rem;">
                     VOLVER A INICIO
                 </a>
@@ -185,24 +184,22 @@
 
         <!-- TARJETA BEIGE DE CALIFICACIÓN -->
         <div class="score-card">
-
             <div class="score-label">PORCENTAJE OBTENIDO:</div>
-            <div class="score-percentage">85%</div>
+            <div class="score-percentage" id="res-percentage">--%</div>
 
-            <div class="score-message">
-                ¡FELICIDADES, HAS APROBADO! <i class="bi bi-emoji-smile-fill ms-1"></i>
+            <div class="score-message" id="res-message">
+                Evaluando resultados... <i class="bi bi-hourglass-split ms-1"></i>
             </div>
 
             <div class="score-details">
-                <div>PUNTAJE TOTAL: <span class="fw-bold text-dark">85/100 PTS</span></div>
-                <div>TIPO DE PRUEBA: <span class="fw-bold text-dark">PRUEBA FINAL</span></div>
+                <div>PUNTAJE TOTAL: <span class="fw-bold text-dark" id="res-points">--/100 PTS</span></div>
+                <div>TIPO DE PRUEBA: <span class="fw-bold text-dark" id="res-type">CARGANDO...</span></div>
             </div>
 
             <hr class="score-separator" />
 
             <div class="level-label">NIVEL DE INGLES ASIGNADO:</div>
-            <div class="level-result">(INTERMEDIO)</div>
-
+            <div class="level-result" id="res-level">(--)</div>
         </div>
 
 
@@ -212,6 +209,74 @@
         </a>
 
     </div>
+    <!-- ==============================================
+     LÓGICA JAVASCRIPT DE RESULTADOS
+     ============================================== -->
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // 1. Extraer el ID del examen desde la URL
+            const params = new URLSearchParams(window.location.search);
+            const attemptId = params.get('id');
 
+            // Si entran directo sin ID, los mandamos al historial
+            if (!attemptId) {
+                window.location.href = '/PanelAlumno/Historial';
+                return;
+            }
+
+            try {
+                // 2. Consultar la API de C#
+                const response = await fetch(`/api/exams/${attemptId}/state`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderizarResultados(data);
+                } else {
+                    alert("No se pudieron cargar los resultados del examen.");
+                }
+            } catch (error) {
+                console.error("Error obteniendo resultados:", error);
+            }
+        });
+
+        function renderizarResultados(data) {
+            // Obtenemos el porcentaje final (C# lo manda en el score)
+            const score = data.score || data.Score || data.porcentajeObtenido || 0;
+            document.getElementById('res-percentage').innerText = `${score}%`;
+
+            // Colores y Mensaje según Status
+            const status = data.status || data.Status || data.resultado;
+            const messageEl = document.getElementById('res-message');
+
+            if (status === "APROBADO") {
+                messageEl.innerHTML = `¡FELICIDADES, HAS APROBADO! <i class="bi bi-emoji-smile-fill ms-1"></i>`;
+                messageEl.style.color = "#166534"; // Verde
+            } else {
+                messageEl.innerHTML = `HAS REPROBADO LA PRUEBA <i class="bi bi-emoji-frown-fill ms-1"></i>`;
+                messageEl.style.color = "#991b1b"; // Rojo
+            }
+
+            // Tipo de Prueba (Deducido por cantidad de preguntas)
+            const totalQuestions = data.totalQuestions || data.TotalQuestions || 20;
+            const tipoPrueba = totalQuestions === 40 ? "PRUEBA FINAL" : "PRÁCTICA";
+            document.getElementById('res-type').innerText = tipoPrueba;
+            document.getElementById('res-points').innerText = `${score}/100 PTS`;
+
+           // Nivel de Inglés
+        let nivel = "N/A (ES PRÁCTICA)";
+        if (tipoPrueba === "PRUEBA FINAL") {
+            if (score < 70) {
+                nivel = "(NO APROBADO)";
+            } else if (score < 80) {
+                nivel = "(BÁSICO)";
+            } else if (score < 90) {
+                nivel = "(INTERMEDIO)";
+            } else {
+                nivel = "(AVANZADO)";
+            }
+        }
+        document.getElementById('res-level').innerText = nivel;
+        }
+    </script>
 </body>
 </html>

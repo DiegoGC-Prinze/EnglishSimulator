@@ -261,16 +261,56 @@
             </div>
 
             <div class="confirmation-text">
-                Estas a punto de comenzar el intento 1/2 de la prueba final, da click en continuar para iniciar la prueba:
+                Estas a punto de comenzar el intento <span id="intentoActualTexto">...</span> de la prueba final, da click en continuar para iniciar la prueba:
             </div>
             <!-- Botón Modular 3D Amarillo -->
-            <a asp-controller="PanelAlumno" asp-action="Simulador" class="btn-3d btn-3d-yellow px-5 py-2">
+            <a asp-controller="PanelAlumno" asp-action="Simulador" asp-route-tipo="final" class="btn-3d btn-3d-yellow px-5 py-2">
                 CONTINUAR <i class="bi bi-chevron-right ms-1"></i>
             </a>
 
         </main>
 
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const response = await fetch('/api/results/summary');
 
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // La estadística de la Prueba Final es el segundo elemento (índice 1)
+                    const statFinal = data.statistics[1];
+
+                    if (statFinal) {
+                        const intentoSiguiente = statFinal.attemptsUsed + 1;
+                        const textoConfirmacion = `${intentoSiguiente}/${statFinal.maxAttempts}`;
+
+                        document.getElementById('intentoActualTexto').innerText = textoConfirmacion;
+
+                        // Si el usuario ya gastó todos sus intentos, bloqueamos el botón amarillo
+                        if (statFinal.attemptsUsed >= statFinal.maxAttempts) {
+                            const btnContinuar = document.querySelector('.btn-3d-yellow');
+                            btnContinuar.removeAttribute('href'); // Le quitamos el enlace
+                            btnContinuar.style.pointerEvents = 'none'; // Evitamos que sea clickeable
+                            btnContinuar.style.backgroundColor = '#d1d5db'; // Lo pintamos gris
+                            btnContinuar.style.borderColor = '#9ca3af';
+                            btnContinuar.style.color = '#4b5563';
+                            btnContinuar.style.boxShadow = 'none';
+                            btnContinuar.innerHTML = 'INTENTOS AGOTADOS <i class="bi bi-x-circle ms-1"></i>';
+
+                            document.querySelector('.confirmation-text').innerText =
+                                "Has agotado el número máximo de intentos permitidos para la prueba final.";
+                        }
+                    }
+                } else if (response.status === 401) {
+                    window.location.href = '/Acceso/Index';
+                }
+            } catch (error) {
+                console.error("Error al cargar la información del intento:", error);
+                document.getElementById('intentoActualTexto').innerText = "?/?";
+            }
+        });
+    </script>
 </body>
 </html>

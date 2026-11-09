@@ -38,7 +38,7 @@ public class ApiAuthController : ControllerBase
         _passwordHasher = passwordHasher;
     }
 
-    [HttpPost("register")]
+ 
 
 [HttpGet("csrf")]
 [AllowAnonymous]
@@ -54,7 +54,7 @@ public IActionResult GetCsrfToken(
         token = tokens.RequestToken
     });
 }
-
+    [HttpPost("register")]
 
     public async Task<IActionResult> Register(
         [FromBody] RegisterRequest request)

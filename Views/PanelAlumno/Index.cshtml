@@ -262,7 +262,7 @@
     <nav class="top-navbar">
         <div class="navbar-brand-title">TEST INGLES</div>
         <div class="user-info">
-            <span>Bienvenido, Aldair Lopez <i class="bi bi-person ms-1 fs-5"></i></span>
+            <span>Bienvenido, @User.Identity?.Name <i class="bi bi-person ms-1 fs-5"></i></span>
             <a href="/Acceso/Index" class="btn-3d btn-3d-red px-3 py-1" style="font-size: 0.9rem;">
                 Cerrar Sesion <i class="bi bi-box-arrow-right ms-1"></i>
             </a>
@@ -317,7 +317,7 @@
                             <li><i class="bi bi-percent"></i> Puntaje mínimo aprobatorio:<br>70%</li>
                         </ul>
                         <div class="intentos-text">
-                            Intentos: <span class="intentos-highlight">2 / 5</span>
+                            Intentos: <span class="intentos-highlight" id="intentosPractica">Cargando...</span>
                         </div>
                         <a asp-controller="PanelAlumno" asp-action="SimuladorPractica" class="btn-3d btn-3d-green w-100 py-2 text-decoration-none">
                             INICIAR <i class="bi bi-chevron-right ms-1"></i>
@@ -338,7 +338,7 @@
                             <li><i class="bi bi-bar-chart-steps"></i> Determina tu nivel: Basico,<br>Intermedio o Avanzado</li>
                         </ul>
                         <div class="intentos-text">
-                            Intentos: <span class="intentos-highlight">0 / 2</span>
+                            Intentos: <span class="intentos-highlight" id="intentosFinal">Cargando...</span>
                         </div>
                         <a asp-controller="PanelAlumno" asp-action="PruebaFinal" class="btn-3d btn-3d-green w-100 py-2 text-decoration-none">
                             INICIAR <i class="bi bi-chevron-right ms-1"></i>
@@ -350,6 +350,42 @@
         </main>
 
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                // Llamamos a la API de tu compañero que devuelve las estadísticas del alumno
+                const response = await fetch('/api/results/summary');
 
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // La API devuelve un arreglo llamado "statistics"
+                    // Asumimos que la Práctica es el primer tipo de examen y la Final el segundo
+                    const statPractica = data.statistics[0];
+                    const statFinal = data.statistics[1];
+
+                    // Inyectamos los datos en tu diseño (Intentos Usados / Intentos Máximos)
+                    if (statPractica) {
+                        document.getElementById('intentosPractica').innerText =
+                            `${statPractica.attemptsUsed} / ${statPractica.maxAttempts}`;
+                    }
+
+                    if (statFinal) {
+                        document.getElementById('intentosFinal').innerText =
+                            `${statFinal.attemptsUsed} / ${statFinal.maxAttempts}`;
+                    }
+                } else {
+                    // Si la sesión expiró, redirigimos al login
+                    if (response.status === 401) {
+                        window.location.href = '/Acceso/Index';
+                    }
+                }
+            } catch (error) {
+                console.error("Error al cargar las estadísticas:", error);
+                document.getElementById('intentosPractica').innerText = "? / 5";
+                document.getElementById('intentosFinal').innerText = "? / 2";
+            }
+        });
+    </script>
 </body>
 </html>

@@ -253,8 +253,7 @@
         <div class="exam-header">
             <h2 class="exam-title">TEST INGLES</h2>
             <div class="header-right">
-                <span>Bienvenido, Aldair Lopez</span>
-                <!-- Botón 3D rojo de tu CSS global -->
+                <span>Bienvenido, @User.Identity?.Name</span>
                 <a href="/PanelAlumno/Index" class="btn-3d btn-3d-red px-3 py-1" style="font-size: 0.95rem;">
                     Salir de la prueba
                 </a>
@@ -266,11 +265,13 @@
             <div class="progress-wrapper">
                 <span>Progreso:</span>
                 <div class="custom-progress-bar">
-                    <div class="custom-progress-fill"></div>
+                    <!-- Agregamos id="progressBar" -->
+                    <div class="custom-progress-fill" id="progressBar" style="width: 0%;"></div>
                 </div>
             </div>
-            <div>Pregunta 10 de 20</div>
-            <div>Valor: 5 puntos</div>
+            <!-- Agregamos id="progressText" y id="questionValue" -->
+            <div id="progressText">Cargando...</div>
+            <div id="questionValue">Valor: -- puntos</div>
         </div>
 
         <!-- CRONÓMETRO -->
@@ -289,43 +290,27 @@
             <!-- Columna Izquierda: Preguntas y Opciones -->
             <div class="col-md-7 pe-md-4">
                 <div class="question-instruction">Select the correct answer:</div>
-                <div class="question-text">"HOW OLD IS SHE?"</div>
-                <div class="question-sentence">"SHE ______ 28 YEARS OLD."</div>
+                <!-- Agregamos IDs para inyectar el texto dinámico -->
+                <div class="question-text" id="qText">Cargando pregunta...</div>
+                <div class="question-sentence" id="qSentence"></div>
 
                 <div class="options-title">OPTIONS:</div>
-
-                <div class="options-container">
-                    <label class="option-label">
-                        <input class="form-check-input" type="radio" name="answer" value="has">
-                        <span class="option-letter">A.</span> has
-                    </label>
-                    <label class="option-label">
-                        <input class="form-check-input" type="radio" name="answer" value="is">
-                        <span class="option-letter">B.</span> is
-                    </label>
-                    <label class="option-label">
-                        <input class="form-check-input" type="radio" name="answer" value="are">
-                        <span class="option-letter">C.</span> are
-                    </label>
-                    <label class="option-label">
-                        <input class="form-check-input" type="radio" name="answer" value="have">
-                        <span class="option-letter">D.</span> have
-                    </label>
+                <!-- Vaciamos el contenedor y le ponemos ID para inyectar los radio buttons -->
+                <div class="options-container" id="optionsContainer">
+                    <!-- JS inyectará las opciones aquí -->
                 </div>
             </div>
 
             <!-- Columna Derecha: Imagen y Botón Siguiente -->
             <div class="col-md-5 d-flex flex-column justify-content-between">
                 <div>
-                    <!-- Caja punteada para la imagen de apoyo visual -->
-                    <div class="image-placeholder">
+                    <!-- Agregamos id="qImageContainer" -->
+                    <div class="image-placeholder" id="qImageContainer" style="display: none;">
                         <i class="bi bi-image me-2 fs-4"></i> IMAGEN DE APOYO VISUAL
                     </div>
                 </div>
-
                 <div class="text-end">
-                    <!-- Botón 3D verde de tu CSS global -->
-                    <button class="btn-3d btn-3d-green px-4 py-2" id="btn-next" onclick="siguientePregunta()">
+                    <button type="button" class="btn-3d btn-3d-green px-4 py-2" id="btn-next">
                         SIGUIENTE PREGUNTA <i class="bi bi-caret-right-fill ms-1"></i>
                     </button>
                 </div>
@@ -335,42 +320,254 @@
     </div>
 
     <!-- ==============================================
-         LÓGICA JAVASCRIPT DEL CRONÓMETRO
-         ============================================== -->
+     LÓGICA JAVASCRIPT DEL SIMULADOR (ULTRA-SINCRONIZADA)
+     ============================================== -->
     <script>
-        // Iniciar en 60 segundos
         let timeLeft = 60;
-        const timeDisplay = document.getElementById('time-display');
+        let countdown;
+        let heartbeatInterval;
+        let currentQuestionId = 0;
+        let currentAttemptId = 0;
 
-        const countdown = setInterval(() => {
-            timeLeft--;
-
-            // Formatear a dos dígitos (ej. 00:09)
-            let seconds = timeLeft < 10 ? '0' + timeLeft : timeLeft;
-            timeDisplay.innerText = '00:' + seconds;
-
-            // Alerta visual cuando quedan 10 segundos o menos
-            if (timeLeft <= 10 && timeLeft > 0) {
-                timeDisplay.classList.add('timer-warning');
+        // 1. Obtener el gafete de seguridad
+        async function obtenerGafete() {
+            try {
+                const res = await fetch('/api/auth/csrf');
+                const data = await res.json();
+                return data.token;
+            } catch (e) {
+                console.error("Error obteniendo token:", e);
+                return "";
             }
-
-            // Cuando el tiempo llega a cero
-            if (timeLeft <= 0) {
-                clearInterval(countdown);
-                timeDisplay.innerText = '00:00';
-
-                // Mostrar alerta y simular clic en siguiente pregunta
-                alert('¡Se agotó el tiempo! Avanzando a la siguiente pregunta...');
-                siguientePregunta();
-            }
-        }, 1000); // 1000 milisegundos = 1 segundo
-
-        // Función que se ejecuta al darle Siguiente
-        function siguientePregunta() {
-            // Aquí en el futuro tu compañero de backend pondrá su código.
-            // Por ahora, solo recargamos la página para simular que avanzó.
-            window.location.reload();
         }
+
+        // 2. Iniciar el examen
+        async function iniciarExamen() {
+            const params = new URLSearchParams(window.location.search);
+            const examType = params.get('tipo') || 'practice';
+            const token = await obtenerGafete();
+
+            try {
+                const response = await fetch('/api/exams/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+                    body: JSON.stringify({ ExamType: examType })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentAttemptId = data.attemptId || data.id;
+                    obtenerPregunta();
+                } else {
+                    alert("Fallo al iniciar el examen.");
+                }
+            } catch (error) {
+                console.error("Error iniciando examen:", error);
+            }
+        }
+
+        // 3. Obtener la pregunta (Llama a /resume)
+        async function obtenerPregunta() {
+            try {
+                const token = await obtenerGafete();
+                const response = await fetch(`/api/exams/${currentAttemptId}/resume`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.status !== "EN_PROCESO") {
+        window.location.href = `/PanelAlumno/Resultados?id=${currentAttemptId}`;
+        return;
+                    }
+                    renderizarPregunta(data);
+                }
+            } catch (error) {
+                console.error("Error obteniendo pregunta:", error);
+            }
+        }
+
+        // 4. Inyectar datos en HTML
+        function renderizarPregunta(data) {
+            const pregunta = data.currentQuestion;
+            currentQuestionId = pregunta.id;
+
+            document.getElementById('qText').innerText = pregunta.text || "";
+            document.getElementById('qSentence').innerText = "";
+
+            const currentPosition = data.currentPosition || 1;
+            const totalQuestions = data.totalQuestions || 20;
+
+            const puntos = totalQuestions === 40 ? 2.5 : 5;
+            document.getElementById('questionValue').innerText = `Valor: ${puntos} puntos`;
+
+            document.getElementById('progressText').innerText = `Pregunta ${currentPosition} de ${totalQuestions}`;
+
+            const porcentaje = (currentPosition / totalQuestions) * 100;
+            document.getElementById('progressBar').style.width = `${porcentaje}%`;
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            const letras = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+            const opcionesArray = pregunta.options || [];
+            opcionesArray.forEach((opcion, index) => {
+                const html = `
+                    <label class="option-label">
+                        <input class="form-check-input" type="radio" name="answer" value="${opcion.id}">
+                        <span class="option-letter">${letras[index]}.</span> ${opcion.text}
+                    </label>
+                `;
+                optionsContainer.insertAdjacentHTML('beforeend', html);
+            });
+
+            // Aseguramos habilitar el botón
+            document.getElementById('btn-next').disabled = false;
+            iniciarCronometro(data.secondsRemaining || 60);
+        }
+
+        // NUEVO: Latido Inteligente que alinea tu reloj con el de C#
+        async function enviarLatido() {
+            try {
+                const token = await obtenerGafete();
+                const response = await fetch(`/api/exams/${currentAttemptId}/heartbeat`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Si hay mucha desincronización por culpa del internet, ajustamos el reloj silenciosamente
+                    if (data.status === "EN_PROCESO" && data.currentQuestion && data.currentQuestion.id === currentQuestionId) {
+                        if (Math.abs(timeLeft - data.secondsRemaining) > 2) {
+                            timeLeft = data.secondsRemaining;
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // NUEVO: Validar si de verdad C# llegó a cero
+        async function verificarTiempoAgotado() {
+            try {
+                const token = await obtenerGafete();
+                const response = await fetch(`/api/exams/${currentAttemptId}/heartbeat`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Si C# dice que todavía faltan esos famosos 3 segundos
+                    if (data.status === "EN_PROCESO" && data.currentQuestion && data.currentQuestion.id === currentQuestionId && data.secondsRemaining > 0) {
+                        document.getElementById('btn-next').disabled = false;
+                        iniciarCronometro(data.secondsRemaining); // Reanuda los 3 segundos faltantes
+                        return;
+                    }
+
+                    // Si C# confirma que ya hizo el cambio de pregunta
+                    alert("¡Se agotó el tiempo! Avanzando a la siguiente...");
+                    obtenerPregunta(); // Llama a /resume
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // 5. Cronómetro
+        function iniciarCronometro(segundos) {
+            clearInterval(countdown);
+            clearInterval(heartbeatInterval);
+
+            timeLeft = segundos;
+            const timeDisplay = document.getElementById('time-display');
+            timeDisplay.classList.remove('timer-warning');
+
+            heartbeatInterval = setInterval(() => {
+                enviarLatido();
+            }, 5000);
+
+            countdown = setInterval(() => {
+                timeLeft--;
+                let secText = timeLeft < 10 ? '0' + timeLeft : timeLeft;
+                timeDisplay.innerText = '00:' + secText;
+
+                if (timeLeft <= 10 && timeLeft > 0) {
+                    timeDisplay.classList.add('timer-warning');
+                }
+
+                if (timeLeft <= 0) {
+                    // Frenamos todo
+                    clearInterval(countdown);
+                    clearInterval(heartbeatInterval);
+                    timeDisplay.innerText = '00:00';
+                    document.getElementById('btn-next').disabled = true;
+
+                    // Le preguntamos a C# si de verdad ya se acabó
+                    verificarTiempoAgotado();
+                }
+            }, 1000);
+        }
+
+        // 6. Enviar Respuesta Manual
+        async function enviarRespuesta() {
+            const btnNext = document.getElementById('btn-next');
+            btnNext.disabled = true;
+
+            const seleccion = document.querySelector('input[name="answer"]:checked');
+            if (!seleccion) {
+                alert("Por favor selecciona una opción.");
+                btnNext.disabled = false;
+                return;
+            }
+
+            clearInterval(countdown);
+            clearInterval(heartbeatInterval);
+
+            const respuestaId = parseInt(seleccion.value);
+            const token = await obtenerGafete();
+
+            try {
+                const response = await fetch(`/api/exams/${currentAttemptId}/answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({
+                        questionId: currentQuestionId,
+                        optionId: respuestaId
+                    })
+                });
+
+                if (response.ok) {
+                    obtenerPregunta(); // Avanza rápido sin alertas
+                } else {
+                    alert("Error al enviar la respuesta.");
+                    btnNext.disabled = false;
+                    iniciarCronometro(timeLeft); // Reanuda si falló la red
+                }
+            } catch (error) {
+                console.error(error);
+                btnNext.disabled = false;
+                iniciarCronometro(timeLeft);
+            }
+        }
+
+        // 7. Eventos
+        document.addEventListener("DOMContentLoaded", () => {
+            const btnNext = document.getElementById('btn-next');
+            if (btnNext) {
+                btnNext.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    enviarRespuesta();
+                });
+            }
+            iniciarExamen();
+        });
     </script>
 </body>
 </html>

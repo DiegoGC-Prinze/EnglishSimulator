@@ -15,6 +15,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/site.css" />
+
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
@@ -287,14 +288,15 @@
                         <div class="alert alert-success py-2 small text-center mb-4 rounded-2 border-0 bg-success text-white position-relative" style="z-index: 20;">@ViewBag.ExitoRegistro</div>
                     }
 
-                    <form asp-action="Ingresar" method="post" style="position: relative; z-index: 20;">
+                    <form id="formLogin" style="position: relative; z-index: 20;">
                         <!-- Fila Correo -->
                         <div class="row align-items-center mb-4">
                             <label class="col-4 form-label text-end pe-3 mb-0">Correo:</label>
                             <div class="col-7">
                                 <div class="input-wrapper">
                                     <div class="icon-container"><i class="bi bi-envelope-at"></i></div>
-                                    <input type="email" name="correo" required />
+                                    <!-- Aquí está el cambio vital: agregamos id="loginCorreo" -->
+                                    <input type="email" id="loginCorreo" name="correo" required />
                                 </div>
                                 <div class="helper-text text-center">
                                     ¿No tienes usuario? <span class="helper-link" onclick="toggleVistas()">Regístrate</span>
@@ -308,7 +310,7 @@
                             <div class="col-7">
                                 <div class="input-wrapper">
                                     <div class="icon-container"><i class="bi bi-lock"></i></div>
-                                    <input type="password" name="contrasena" required />
+                                    <input type="password" id= "loginPassword" name="contrasena" required />
                                 </div>
                             
                             </div>
@@ -337,14 +339,14 @@
                         <div class="alert alert-danger py-2 small text-center mb-4 rounded-2 border-0 bg-danger text-white">@ViewBag.ErrorRegistro</div>
                     }
 
-                    <form asp-action="Registrar" method="post">
+                    <form id="formRegistro">
                         <!-- Nombre -->
                         <div class="row align-items-center mb-3">
                             <label class="col-4 form-label text-end pe-3 mb-0">Nombre Completo:</label>
                             <div class="col-7">
                                 <div class="input-wrapper">
                                     <div class="icon-container"><i class="bi bi-person"></i></div>
-                                    <input type="text" name="nombre" required />
+                                    <input type="text" id="regNombre" name="nombre" required />
                                 </div>
                             </div>
                         </div>
@@ -355,7 +357,7 @@
                             <div class="col-7">
                                 <div class="input-wrapper">
                                     <div class="icon-container"><i class="bi bi-envelope-at"></i></div>
-                                    <input type="email" name="correo" required />
+                                    <input type="email" id="regCorreo" name="correo" required />
                                 </div>
                             </div>
                         </div>
@@ -366,7 +368,7 @@
                             <div class="col-7">
                                 <div class="input-wrapper">
                                     <div class="icon-container"><i class="bi bi-key"></i></div>
-                                    <input type="password" name="contrasena" required />
+                                    <input type="password" id="regPassword" name="contrasena" required />
                                 </div>
                             </div>
                         </div>
@@ -377,7 +379,7 @@
                             <div class="col-7">
                                 <div class="input-wrapper">
                                     <div class="icon-container"><i class="bi bi-lock"></i><i class="bi bi-lock"></i></div>
-                                    <input type="password" name="confirmarContrasena" required />
+                                    <input type="password" id="regConfirmPassword" name="confirmarContrasena" required />
                                 </div>
                             </div>
                         </div>
@@ -429,5 +431,92 @@
             </text>
         }
     </script>
+
+    <script>
+        // Función para obtener el gafete de seguridad del backend
+        async function obtenerGafete() {
+            try {
+                const res = await fetch('/api/auth/csrf');
+                const data = await res.json();
+                return data.token;
+            } catch (e) {
+                console.error("Error obteniendo el token de seguridad", e);
+                return "";
+            }
+        }
+
+        // --- LÓGICA DE INICIO DE SESIÓN ---
+        document.getElementById('formLogin').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const email = document.getElementById('loginCorreo').value;
+            const password = document.getElementById('loginPassword').value;
+            const token = await obtenerGafete(); // 1. Pedimos permiso
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token // 2. Mostramos el gafete
+                    },
+                    body: JSON.stringify({ email: email, password: password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.location.href = '/PanelAlumno/Index';
+                } else {
+                    alert(result.message || 'Credenciales incorrectas');
+                }
+            } catch (error) {
+                console.error('Error de red:', error);
+                alert('No se pudo conectar con el servidor.');
+            }
+        });
+
+        // --- LÓGICA DE REGISTRO ---
+        document.getElementById('formRegistro').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById('regNombre').value;
+            const email = document.getElementById('regCorreo').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+            // Validación de contraseñas en el frontend
+            if (password !== confirmPassword) {
+                alert('Las contraseñas no coinciden. Por favor, verifícalas.');
+                return; // Detiene el proceso aquí mismo
+            }
+
+            const token = await obtenerGafete();
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    // El backend solo necesita recibir esto:
+                    body: JSON.stringify({ name: name, email: email, password: password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.location.href = '/PanelAlumno/Index';
+                } else {
+                    alert(result.message || 'Error al registrar el usuario');
+                }
+            } catch (error) {
+                console.error('Error de red:', error);
+                alert('No se pudo conectar con el servidor.');
+            }
+        });
+    </script>
+
 </body>
 </html>
