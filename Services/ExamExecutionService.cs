@@ -31,9 +31,12 @@ public class ExamExecutionService
         _grading = grading;
     }
 
+    // Agrega este helper privado en ExamExecutionService
+    private static DateTime TruncateToSeconds(DateTime dt) =>
+        new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Kind);
     // Recuperar el intento y comprobar su propietario.
 
-private async Task<(
+    private async Task<(
     IntentosExaman Attempt,
     List<RespuestasIntento> Answers)> LoadAsync(
     uint userId,
@@ -88,13 +91,13 @@ private async Task<(
             (now - attempt.UltimaSincronizacion.Value)
             .TotalSeconds;
 
-        if (difference < 1)
+        if (difference < 0.5)
             return;
 
         // Si el navegador desapareció, no descontamos
         // todo el tiempo transcurrido fuera de la app.
         int elapsed = (int)Math.Min(
-            Math.Floor(difference),
+            Math.Round(difference, MidpointRounding.AwayFromZero),
             MaximumHeartbeatGap);
 
         attempt.SegundosRestantes = (ushort)Math.Max(
@@ -116,7 +119,7 @@ private async Task<(
 
             // La siguiente pregunta se activará
             // cuando el cliente solicite reanudar.
-            attempt.UltimaSincronizacion = null;
+            attempt.UltimaSincronizacion = hasNext ? now : null;
             return;
         }
 
@@ -136,7 +139,7 @@ private async Task<(
         var (attempt, answers) =
             await LoadAsync(userId, attemptId);
 
-        var now = DateTime.UtcNow;
+        var now = TruncateToSeconds(DateTime.UtcNow);
 
         UpdateClock(attempt, answers, now);
 
@@ -166,7 +169,7 @@ private async Task<(
         var (attempt, answers) =
             await LoadAsync(userId, attemptId);
 
-        UpdateClock(attempt, answers, DateTime.UtcNow);
+        UpdateClock(attempt, answers, TruncateToSeconds(DateTime.UtcNow));
 
         attempt.UltimaSincronizacion = null;
 
@@ -195,7 +198,7 @@ private async Task<(
             throw new InvalidOperationException(
                 "Este examen ya terminó.");
 
-        var now = DateTime.UtcNow;
+        var now = TruncateToSeconds(DateTime.UtcNow);
 
         UpdateClock(attempt, answers, now);
 
@@ -276,7 +279,7 @@ if (attempt.UltimaSincronizacion is null)
 
         if (attempt.Resultado == "EN_PROCESO")
         {
-            UpdateClock(attempt, answers, DateTime.UtcNow);
+            UpdateClock(attempt, answers, TruncateToSeconds(DateTime.UtcNow));
 
             var current = answers.FirstOrDefault(
                 r => r.TiempoRespuesta is null);
@@ -359,7 +362,8 @@ if (attempt.UltimaSincronizacion is null)
                 question.IdPregunta,
                 question.TextoPregunta,
                 question.SegundosTiempo,
-                options);
+                options,
+                question.ImagenUrl);
         }
 
         return new ExamStateDto(

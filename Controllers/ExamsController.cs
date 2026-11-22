@@ -146,7 +146,7 @@ public Task<IActionResult> Start(
             _executionService.SyncAsync(
                 userId,
                 attemptId,
-                false));
+                true));
     }
 
     [HttpPost("{attemptId}/pause")]

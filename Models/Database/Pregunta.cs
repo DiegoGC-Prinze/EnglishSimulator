@@ -11,6 +11,8 @@ public partial class Pregunta
 
     public string TextoPregunta { get; set; } = null!;
 
+    public string? ImagenUrl { get; set; }
+
     public ushort SegundosTiempo { get; set; }
 
     public virtual Nivele IdNivelNavigation { get; set; } = null!;

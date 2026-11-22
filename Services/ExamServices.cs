@@ -14,10 +14,10 @@ public record ExamOptionDto(
 public record ExamQuestionDto(
     uint Id,
     string Text,
-    int TimeLimitSeconds,
-    List<ExamOptionDto> Options
+    ushort TimeSeconds,
+    List<ExamOptionDto> Options,
+    string? ImageUrl = null
 );
-
 
 public class ExamService
 {

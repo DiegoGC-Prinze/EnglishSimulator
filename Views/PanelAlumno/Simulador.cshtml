@@ -243,6 +243,13 @@
             letter-spacing: 1px;
             margin-bottom: 2rem;
         }
+
+        .question-support-img {
+            width: 100%;
+            max-height: 240px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
@@ -320,24 +327,48 @@
     </div>
 
     <!-- ==============================================
-     LÓGICA JAVASCRIPT DEL SIMULADOR (ULTRA-SINCRONIZADA)
+     LÓGICA JAVASCRIPT DEL SIMULADOR (SINCRONIZADA)
      ============================================== -->
     <script>
-        let timeLeft = 60;
-        let countdown;
-        let heartbeatInterval;
+        let deadline = 0;
+        let lastDisplayedSec = 60;
+        let countdown = null;
+        let heartbeatInterval = null;
         let currentQuestionId = 0;
         let currentAttemptId = 0;
+        let cachedCsrfToken = null;
+        let isProcessing = false;
 
-        // 1. Obtener el gafete de seguridad
-        async function obtenerGafete() {
+        // 1. Obtener y cachear el token CSRF (evita latencia en cada latido)
+        async function obtenerGafete(forceRefresh = false) {
+            if (cachedCsrfToken && !forceRefresh) return cachedCsrfToken;
             try {
                 const res = await fetch('/api/auth/csrf');
                 const data = await res.json();
-                return data.token;
+                cachedCsrfToken = data.token;
+                return cachedCsrfToken;
             } catch (e) {
                 console.error("Error obteniendo token:", e);
                 return "";
+            }
+        }
+
+        // Formatea 60 como 01:00 y 59..0 como 00:59..00:00
+        function formatearTiempo(segundos) {
+            const s = Math.max(0, Math.floor(segundos));
+            const mins = Math.floor(s / 60);
+            const secs = s % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function pintarTiempo(segundos) {
+            const timeDisplay = document.getElementById('time-display');
+            timeDisplay.innerText = formatearTiempo(segundos);
+
+            if (segundos <= 10 && segundos > 0) {
+                timeDisplay.classList.add('timer-warning');
+            } else {
+                timeDisplay.classList.remove('timer-warning');
             }
         }
 
@@ -345,7 +376,7 @@
         async function iniciarExamen() {
             const params = new URLSearchParams(window.location.search);
             const examType = params.get('tipo') || 'practice';
-            const token = await obtenerGafete();
+            const token = await obtenerGafete(true);
 
             try {
                 const response = await fetch('/api/exams/start', {
@@ -357,7 +388,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     currentAttemptId = data.attemptId || data.id;
-                    obtenerPregunta();
+                    await obtenerPregunta();
                 } else {
                     alert("Fallo al iniciar el examen.");
                 }
@@ -366,7 +397,7 @@
             }
         }
 
-        // 3. Obtener la pregunta (Llama a /resume)
+        // 3. Obtener la pregunta inicial o reanudar (/resume)
         async function obtenerPregunta() {
             try {
                 const token = await obtenerGafete();
@@ -377,22 +408,41 @@
 
                 if (response.ok) {
                     const data = await response.json();
-
-                    if (data.status !== "EN_PROCESO") {
-        window.location.href = `/PanelAlumno/Resultados?id=${currentAttemptId}`;
-        return;
-                    }
-                    renderizarPregunta(data);
+                    procesarEstadoServidor(data);
                 }
             } catch (error) {
                 console.error("Error obteniendo pregunta:", error);
             }
         }
 
+        // Centraliza cualquier respuesta de C# (/resume, /answer, /heartbeat)
+        function procesarEstadoServidor(data) {
+            if (data.status !== "EN_PROCESO") {
+                detenerRelojes();
+                window.location.href = `/PanelAlumno/Resultados?id=${currentAttemptId}`;
+                return;
+            }
+
+            if (!data.currentQuestion) return;
+
+            // Si cambió la pregunta, renderizamos la nueva de inmediato sin hacer otro fetch
+        if (data.currentQuestion.id !== currentQuestionId) {
+                        renderizarPregunta(data);
+                    } else {
+                        // Misma pregunta: solo ajustamos si el servidor lleva menos tiempo restante
+                        const restanteLocal = Math.ceil((deadline - Date.now()) / 1000);
+                        if (data.secondsRemaining < restanteLocal - 1) {
+                            deadline = Date.now() + (data.secondsRemaining * 1000);
+                            pintarTiempo(data.secondsRemaining);
+                        }
+                    }
+        }
+
         // 4. Inyectar datos en HTML
         function renderizarPregunta(data) {
             const pregunta = data.currentQuestion;
             currentQuestionId = pregunta.id;
+            isProcessing = false;
 
             document.getElementById('qText').innerText = pregunta.text || "";
             document.getElementById('qSentence').innerText = "";
@@ -402,7 +452,6 @@
 
             const puntos = totalQuestions === 40 ? 2.5 : 5;
             document.getElementById('questionValue').innerText = `Valor: ${puntos} puntos`;
-
             document.getElementById('progressText').innerText = `Pregunta ${currentPosition} de ${totalQuestions}`;
 
             const porcentaje = (currentPosition / totalQuestions) * 100;
@@ -412,8 +461,7 @@
             optionsContainer.innerHTML = '';
             const letras = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-            const opcionesArray = pregunta.options || [];
-            opcionesArray.forEach((opcion, index) => {
+            (pregunta.options || []).forEach((opcion, index) => {
                 const html = `
                     <label class="option-label">
                         <input class="form-check-input" type="radio" name="answer" value="${opcion.id}">
@@ -423,13 +471,33 @@
                 optionsContainer.insertAdjacentHTML('beforeend', html);
             });
 
-            // Aseguramos habilitar el botón
+            // Mostrar u ocultar imagen de apoyo
+            const imgContainer = document.getElementById('qImageContainer');
+            if (pregunta.imageUrl) {
+                imgContainer.innerHTML = `<img src="${pregunta.imageUrl}" alt="Imagen de apoyo" class="question-support-img">`;
+                imgContainer.style.display = 'flex';
+                imgContainer.style.border = '2px solid #cbd5e1';
+                imgContainer.style.padding = '8px';
+                imgContainer.style.height = 'auto';
+            } else {
+                imgContainer.innerHTML = '';
+                imgContainer.style.display = 'none';
+            }
+
             document.getElementById('btn-next').disabled = false;
-            iniciarCronometro(data.secondsRemaining || 60);
+            iniciarCronometro(data.secondsRemaining ?? 60);
         }
 
-        // NUEVO: Latido Inteligente que alinea tu reloj con el de C#
+        function detenerRelojes() {
+            clearInterval(countdown);
+            clearInterval(heartbeatInterval);
+            countdown = null;
+            heartbeatInterval = null;
+        }
+
+        // Latido sincronizado con C#
         async function enviarLatido() {
+            if (isProcessing) return;
             try {
                 const token = await obtenerGafete();
                 const response = await fetch(`/api/exams/${currentAttemptId}/heartbeat`, {
@@ -439,93 +507,90 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    // Si hay mucha desincronización por culpa del internet, ajustamos el reloj silenciosamente
-                    if (data.status === "EN_PROCESO" && data.currentQuestion && data.currentQuestion.id === currentQuestionId) {
-                        if (Math.abs(timeLeft - data.secondsRemaining) > 2) {
-                            timeLeft = data.secondsRemaining;
-                        }
-                    }
+                    procesarEstadoServidor(data);
                 }
-            } catch(e) {}
-        }
-
-        // NUEVO: Validar si de verdad C# llegó a cero
-        async function verificarTiempoAgotado() {
-            try {
-                const token = await obtenerGafete();
-                const response = await fetch(`/api/exams/${currentAttemptId}/heartbeat`, {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': token }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-
-                    // Si C# dice que todavía faltan esos famosos 3 segundos
-                    if (data.status === "EN_PROCESO" && data.currentQuestion && data.currentQuestion.id === currentQuestionId && data.secondsRemaining > 0) {
-                        document.getElementById('btn-next').disabled = false;
-                        iniciarCronometro(data.secondsRemaining); // Reanuda los 3 segundos faltantes
-                        return;
-                    }
-
-                    // Si C# confirma que ya hizo el cambio de pregunta
-                    alert("¡Se agotó el tiempo! Avanzando a la siguiente...");
-                    obtenerPregunta(); // Llama a /resume
-                }
-            } catch(e) {
-                console.error(e);
+            } catch (e) {
+                console.error("Error en heartbeat:", e);
             }
         }
 
-        // 5. Cronómetro
+        // Validar cierre de tiempo con el servidor sin usar alert() bloqueante
+        async function verificarTiempoAgotado() {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            try {
+                const token = await obtenerGafete();
+                const response = await fetch(`/api/exams/${currentAttemptId}/heartbeat`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Si el servidor aún marca segundos restantes para esta misma pregunta
+                    if (data.status === "EN_PROCESO" &&
+                        data.currentQuestion &&
+                        data.currentQuestion.id === currentQuestionId &&
+                        data.secondsRemaining > 0) {
+                        isProcessing = false;
+                        document.getElementById('btn-next').disabled = false;
+                        iniciarCronometro(data.secondsRemaining);
+                        return;
+                    }
+
+                    // Si el servidor ya avanzó o finalizó, aplicamos el nuevo estado directo
+                    procesarEstadoServidor(data);
+                }
+            } catch (e) {
+                console.error("Error verificando tiempo:", e);
+                isProcessing = false;
+            }
+        }
+
+        // 5. Cronómetro basado en reloj real (Date.now)
         function iniciarCronometro(segundos) {
-            clearInterval(countdown);
-            clearInterval(heartbeatInterval);
+            detenerRelojes();
 
-            timeLeft = segundos;
-            const timeDisplay = document.getElementById('time-display');
-            timeDisplay.classList.remove('timer-warning');
+            deadline = Date.now() + (segundos * 1000);
+            lastDisplayedSec = segundos;
+            pintarTiempo(segundos);
 
-            heartbeatInterval = setInterval(() => {
-                enviarLatido();
-            }, 5000);
+            heartbeatInterval = setInterval(enviarLatido, 5000);
 
+            // Revisamos cada 250ms para que el cambio de segundo sea exacto sin deriva
             countdown = setInterval(() => {
-                timeLeft--;
-                let secText = timeLeft < 10 ? '0' + timeLeft : timeLeft;
-                timeDisplay.innerText = '00:' + secText;
+                const restante = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
 
-                if (timeLeft <= 10 && timeLeft > 0) {
-                    timeDisplay.classList.add('timer-warning');
+                if (restante !== lastDisplayedSec) {
+                    lastDisplayedSec = restante;
+                    pintarTiempo(restante);
                 }
 
-                if (timeLeft <= 0) {
-                    // Frenamos todo
-                    clearInterval(countdown);
-                    clearInterval(heartbeatInterval);
-                    timeDisplay.innerText = '00:00';
+                if (restante <= 0) {
+                    detenerRelojes();
+                    pintarTiempo(0);
                     document.getElementById('btn-next').disabled = true;
-
-                    // Le preguntamos a C# si de verdad ya se acabó
                     verificarTiempoAgotado();
                 }
-            }, 1000);
+            }, 250);
         }
 
         // 6. Enviar Respuesta Manual
         async function enviarRespuesta() {
-            const btnNext = document.getElementById('btn-next');
-            btnNext.disabled = true;
+            if (isProcessing) return;
 
             const seleccion = document.querySelector('input[name="answer"]:checked');
             if (!seleccion) {
                 alert("Por favor selecciona una opción.");
-                btnNext.disabled = false;
                 return;
             }
 
-            clearInterval(countdown);
-            clearInterval(heartbeatInterval);
+            isProcessing = true;
+            const btnNext = document.getElementById('btn-next');
+            btnNext.disabled = true;
+            detenerRelojes();
 
             const respuestaId = parseInt(seleccion.value);
             const token = await obtenerGafete();
@@ -544,16 +609,22 @@
                 });
 
                 if (response.ok) {
-                    obtenerPregunta(); // Avanza rápido sin alertas
+                    // Usamos la respuesta directa de /answer sin volver a llamar a /resume
+                    const data = await response.json();
+                    procesarEstadoServidor(data);
                 } else {
                     alert("Error al enviar la respuesta.");
+                    isProcessing = false;
                     btnNext.disabled = false;
-                    iniciarCronometro(timeLeft); // Reanuda si falló la red
+                    const restante = Math.max(1, Math.ceil((deadline - Date.now()) / 1000));
+                    iniciarCronometro(restante);
                 }
             } catch (error) {
                 console.error(error);
+                isProcessing = false;
                 btnNext.disabled = false;
-                iniciarCronometro(timeLeft);
+                const restante = Math.max(1, Math.ceil((deadline - Date.now()) / 1000));
+                iniciarCronometro(restante);
             }
         }
 
@@ -561,7 +632,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             const btnNext = document.getElementById('btn-next');
             if (btnNext) {
-                btnNext.addEventListener('click', function(e) {
+                btnNext.addEventListener('click', function (e) {
                     e.preventDefault();
                     enviarRespuesta();
                 });

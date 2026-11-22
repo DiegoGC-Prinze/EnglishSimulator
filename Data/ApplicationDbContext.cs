@@ -123,7 +123,9 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.TextoPregunta)
                 .HasColumnType("text")
                 .HasColumnName("texto_pregunta");
-
+            entity.Property(e => e.ImagenUrl)
+                .HasMaxLength(255)
+                .HasColumnName("imagen_url");
             entity.HasOne(d => d.IdNivelNavigation).WithMany(p => p.Pregunta)
                 .HasForeignKey(d => d.IdNivel)
                 .OnDelete(DeleteBehavior.ClientSetNull)
