@@ -21,6 +21,13 @@ public record ExamQuestionDto(
 
 public class ExamService
 {
+    private static readonly (uint LevelId, string LevelName, int Count)[] FinalQuotas =
+    {
+        (1, "Básico", 13),
+        (2, "Intermedio", 13),
+        (3, "Avanzado", 14)
+    };
+
     private readonly ApplicationDbContext _context;
 
     public ExamService(ApplicationDbContext context)
@@ -31,10 +38,10 @@ public class ExamService
     public async Task<List<ExamQuestionDto>> GenerateExamAsync(
         string examType)
     {
-        int questionCount = examType?.Trim().ToLowerInvariant() switch
+        bool isFinal = examType?.Trim().ToLowerInvariant() switch
         {
-            "practice" => 20,
-            "final" => 40,
+            "practice" => false,
+            "final" => true,
             _ => throw new ArgumentException(
                 "Tipo de examen no válido.")
         };
@@ -45,28 +52,40 @@ public class ExamService
             .Select(p => new
             {
                 p.IdPregunta,
+                p.IdNivel,
                 p.TextoPregunta,
                 p.SegundosTiempo
             })
             .ToListAsync();
 
-        if (questions.Count < questionCount)
+        if (isFinal)
+        {
+            var questionsByLevel = questions.ToLookup(p => p.IdNivel);
+            questions.Clear();
+
+            foreach (var (levelId, levelName, count) in FinalQuotas)
+            {
+                var levelQuestions = questionsByLevel[levelId].ToList();
+
+                if (levelQuestions.Count < count)
+                {
+                    throw new InvalidOperationException(
+                        $"No hay suficientes preguntas para el examen final en el nivel {levelName}. " +
+                        $"Se requieren {count} y hay {levelQuestions.Count} disponibles.");
+                }
+
+                Shuffle(levelQuestions);
+                questions.AddRange(levelQuestions.Take(count));
+            }
+        }
+        else if (questions.Count < 20)
         {
             throw new InvalidOperationException(
                 "No hay suficientes preguntas disponibles.");
         }
 
-        // Mezclar las preguntas con Fisher-Yates.
-        for (int i = questions.Count - 1; i > 0; i--)
-        {
-            int j = RandomNumberGenerator.GetInt32(i + 1);
-
-            (questions[i], questions[j]) =
-                (questions[j], questions[i]);
-        }
-
-        // Seleccionar 20 o 40 preguntas sin repetir.
-        var selected = questions.Take(questionCount).ToList();
+        Shuffle(questions);
+        var selected = isFinal ? questions : questions.Take(20).ToList();
 
         var questionIds = selected
             .Select(p => p.IdPregunta)
@@ -115,5 +134,16 @@ public class ExamService
         }).ToList();
 
         return exam;
+    }
+
+    private static void Shuffle<T>(List<T> questions)
+    {
+        for (int i = questions.Count - 1; i > 0; i--)
+        {
+            int j = RandomNumberGenerator.GetInt32(i + 1);
+
+            (questions[i], questions[j]) =
+                (questions[j], questions[i]);
+        }
     }
 }
